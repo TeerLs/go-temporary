@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
@@ -33,6 +34,12 @@ func (c *Config) LoadConfig() *Config {
 		Server: ServerConfig{
 			Address: os.Getenv("ADDRESS"),
 		},
+	}
+
+	validate := validator.New()
+	err = validate.Struct(config)
+	if err != nil {
+		log.Fatal("Invalid configuration: ", err)
 	}
 
 	return &config

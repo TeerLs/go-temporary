@@ -16,10 +16,13 @@ func main() {
 			panic("Error loading .env file")
 		}
 
-	db, err := gorm.Open(postgres.Open(os.Getenv("DSN")), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(os.Getenv("DSN_DB")), &gorm.Config{})
 	if err != nil {
 		panic("Failed to connect to the database")
 	}
 
-	db.AutoMigrate(&product.Product{})
+	err = db.AutoMigrate(&product.Product{})
+	if err != nil {
+		panic("Failed to migrate the database")
+	}
 }

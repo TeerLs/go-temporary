@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	config := config.Config{}
-	cfg := config.LoadConfig()
+	cfg := config.Config{}
+	cfg.LoadConfig()
 	_ = db.NewDB(&cfg.DB)
 
 	server := http.Server{
@@ -16,5 +16,8 @@ func main() {
 		Handler: nil,
 	}
 
-	server.ListenAndServe()
+	err := server.ListenAndServe()
+	if err != nil {
+		panic("Failed to start the server")
+	}
 }
