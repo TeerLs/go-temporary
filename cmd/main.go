@@ -8,7 +8,7 @@ import (
 
 func main() {
 	cfg := config.Config{}
-	cfg.LoadConfig()
+	cfg = *cfg.LoadConfig()
 	_ = db.NewDB(&cfg.DB)
 
 	server := http.Server{

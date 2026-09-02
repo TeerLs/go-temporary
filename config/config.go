@@ -9,16 +9,16 @@ import (
 )
 
 type DBConfig struct {
-	DSN string
+	DSN string `validate:"required"`
 }
 
 type ServerConfig struct {
-	Address string
+	Address string `validate:"required"`
 }
 
 type Config struct {
-	DB DBConfig
-	Server ServerConfig
+	DB DBConfig `validate:"required"`
+	Server ServerConfig `validate:"required"`
 }
 
 func (c *Config) LoadConfig() *Config {
