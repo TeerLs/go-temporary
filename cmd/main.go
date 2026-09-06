@@ -3,17 +3,24 @@ package main
 import (
 	"net/http"
 	"temporary/config"
+	"temporary/internal/product"
 	"temporary/pkg/db"
 )
 
 func main() {
 	cfg := config.Config{}
 	cfg = *cfg.LoadConfig()
-	_ = db.NewDB(&cfg.DB)
+	database := db.NewDB(&cfg.DB)
+
+	router := http.NewServeMux()
+
+	product.NewProductHandler(router, &product.ProductHandlerDeps{
+		DB: database,
+	})
 
 	server := http.Server{
 		Addr:    cfg.Server.Address,
-		Handler: nil,
+		Handler: router,
 	}
 
 	err := server.ListenAndServe()

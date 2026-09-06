@@ -10,11 +10,10 @@ import (
 )
 
 func main() {
-
-		err := godotenv.Load(".env")
-		if err != nil {
-			panic("Error loading .env file")
-		}
+	err := godotenv.Load(".env")
+	if err != nil {
+		panic("Error loading .env file")
+	}
 
 	db, err := gorm.Open(postgres.Open(os.Getenv("DSN_DB")), &gorm.Config{})
 	if err != nil {
