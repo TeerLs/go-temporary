@@ -9,5 +9,5 @@ type CreateProductRequest struct {
 type UpdateProductRequest struct {
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description"`
-	Images      []string `json:"images" validate:"required"`
+	Images      []string `json:"images"`
 }

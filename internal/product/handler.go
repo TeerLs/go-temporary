@@ -39,6 +39,7 @@ func (h *ProductHandler) Create() http.HandlerFunc {
 		product := &Product{
 			Name:        body.Name,
 			Description: body.Description,
+			Images:      body.Images,
 		}		
 
 		result, err := h.repo.Create(product)
@@ -111,6 +112,7 @@ func (h *ProductHandler) Update() http.HandlerFunc {
 		product := &Product{
 			Name:        body.Name,
 			Description: body.Description,
+			Images:      body.Images,
 		}
 
 		err = h.repo.Update(product, uint(id))
