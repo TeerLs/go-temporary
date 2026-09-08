@@ -5,6 +5,7 @@ import (
 	"temporary/config"
 	"temporary/internal/product"
 	"temporary/pkg/db"
+	"temporary/pkg/middleware"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 
 	server := http.Server{
 		Addr:    cfg.Server.Address,
-		Handler: router,
+		Handler: middleware.LoggingMiddleware(router),
 	}
 
 	err := server.ListenAndServe()
