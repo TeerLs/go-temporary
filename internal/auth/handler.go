@@ -6,26 +6,27 @@ import (
 	"temporary/pkg/jwt"
 	"temporary/pkg/res"
 	"temporary/req"
+
+	"github.com/sirupsen/logrus"
 )
 
-
 type AuthHandler struct {
-	Config config.AuthConfig
+	Config        config.AuthConfig
 	SessionsStore SessionStore
-	JWT *jwt.JWT
+	JWT           *jwt.JWT
 }
 
 type AuthHandlerDeps struct {
-	Config config.AuthConfig
+	Config        config.AuthConfig
 	SessionsStore SessionStore
-	JWT *jwt.JWT
+	JWT           *jwt.JWT
 }
 
 func NewAuthHandler(router *http.ServeMux, deps *AuthHandlerDeps) *AuthHandler {
 	handler := &AuthHandler{
-		Config:       deps.Config,
+		Config:        deps.Config,
 		SessionsStore: deps.SessionsStore,
-		JWT:          deps.JWT,
+		JWT:           deps.JWT,
 	}
 
 	router.HandleFunc("POST /phone-verification", handler.GetPhoneCode())
@@ -43,15 +44,24 @@ func (h *AuthHandler) GetPhoneCode() http.HandlerFunc {
 		}
 
 		var sessionId string
-		err, sessionId, session := h.SessionsStore.Save(body.Phone)
+		err, sessionId = h.SessionsStore.Save(body.Phone)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		session, err := h.SessionsStore.Get(sessionId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		logrus.WithFields(logrus.Fields{
+			"phone": body.Phone,
+			"code":  session.Code,
+		}).Info("SMS verification code")
+
 		res.WriteJSON(w, GetPhoneCodeResponse{
 			SessionId: sessionId,
-			Code:      session.Code,
 		}, http.StatusOK)
 	}
 }
@@ -63,7 +73,7 @@ func (h *AuthHandler) VerifyPhoneCode() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		
+
 		session, err := h.SessionsStore.Get(body.SessionId)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

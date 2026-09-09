@@ -6,12 +6,11 @@ type GetPhoneCodeRequest struct {
 
 type GetPhoneCodeResponse struct {
 	SessionId string `json:"session_id" validate:"required"`
-	Code      string `json:"code" validate:"required"`
 }
 
 type VerifyPhoneCodeRequest struct {
-	Code string `json:"code" validate:"required"`
-	SessionId  string `json:"session_id" validate:"required"`
+	Code      string `json:"code" validate:"required"`
+	SessionId string `json:"session_id" validate:"required"`
 }
 
 type VerifyPhoneCodeResponse struct {
@@ -19,8 +18,8 @@ type VerifyPhoneCodeResponse struct {
 }
 
 var (
-	ErrSessionIdAlreadyExists = "Session id already exists"
-	ErrSessionIdDoesNotExist = "Session doesn't exist exists"
+	ErrSessionIdAlreadyExists   = "Session id already exists"
+	ErrSessionIdDoesNotExist    = "Session doesn't exist exists"
 	ErrPhoneDoesNotMatchSession = "Phone number does not match session"
-	ErrInvalidCode = "Invalid code"
+	ErrInvalidCode              = "Invalid code"
 )
