@@ -2,10 +2,12 @@ package auth
 
 import (
 	"crypto/rand"
+	mathrand "math/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -16,8 +18,23 @@ type SessionStore interface {
 	Get(sessionId string) (string, error)
 }
 
+type Session struct {
+	Phone string
+	Code string
+}
+
+func GenerateCode() string {
+	return fmt.Sprintf("%06d", mathrand.Intn(1000000))
+}
+
+func (s *Session) GenerateAndSetCode() {
+	s.Code = GenerateCode()
+}
+
+
 type InMemorySessionStore struct {
-	sessions map[string]string
+	mu       sync.RWMutex
+	sessions map[string]Session
 }
 
 func (s *InMemorySessionStore) Generate(phone string) (string, error) {
@@ -36,28 +53,37 @@ func (s *InMemorySessionStore) Generate(phone string) (string, error) {
 }
 
 func (s *InMemorySessionStore) Save(sessionId string, phone string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if _, exists := s.sessions[sessionId]; exists {
 		return errors.New(ErrSessionIdAlreadyExists)
 	}
-	s.sessions[sessionId] = phone
+	s.sessions[sessionId] = Session{Phone: phone, Code: GenerateCode()}
 	return nil
 }
 
 func (s *InMemorySessionStore) Get(sessionId string) (string, error) {
-	phone, exists := s.sessions[sessionId]
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	session, exists := s.sessions[sessionId]
 	if !exists {
 		return "", errors.New(ErrSessionIdDoesNotExist)
 	}
-	return phone, nil
+	return session.Phone, nil
 }
 
 func (s *InMemorySessionStore) Delete(sessionId string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	delete(s.sessions, sessionId)
 	return nil
 }
 
 func NewSessionStore() SessionStore {
 	return &InMemorySessionStore{
-		sessions: make(map[string]string),
+		sessions: make(map[string]Session),
 	}
 }

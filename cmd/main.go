@@ -34,13 +34,18 @@ func main() {
 		JWT:          jwt.NewJWT(cfg.Auth.SecretKey),
 	})
 
+	authMiddleware := &middleware.AuthMiddleware{
+		JWT: jwt.NewJWT(cfg.Auth.SecretKey),
+	}
+
 	product.NewProductHandler(router, &product.ProductHandlerDeps{
 		DB: database,
+		AuthMiddleware: authMiddleware,
 	})
 
 	server := http.Server{
 		Addr:    cfg.Server.Address,
-		Handler: middleware.AuthMiddleware(jwt.NewJWT(cfg.Auth.SecretKey))(middleware.LoggingMiddleware(router)),
+		Handler: middleware.LoggingMiddleware(router),
 	}
 
 	err := server.ListenAndServe()

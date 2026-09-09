@@ -4,27 +4,30 @@ import (
 	"net/http"
 	"strconv"
 	"temporary/pkg/db"
+	"temporary/pkg/middleware"
 	"temporary/pkg/res"
 	"temporary/req"
 )
 
 type ProductHandler struct {
 	repo *ProductRepo
+	authMiddleware *middleware.AuthMiddleware
 }
 
 type ProductHandlerDeps struct {
 	DB *db.DB
+	AuthMiddleware *middleware.AuthMiddleware
 }
 
 func NewProductHandler(router *http.ServeMux, deps *ProductHandlerDeps) *ProductHandler {
 	repo := NewProductRepo(deps.DB.DB)
-	handler := &ProductHandler{repo: repo}
+	handler := &ProductHandler{repo: repo, authMiddleware: deps.AuthMiddleware}
 
-	router.HandleFunc("/products", handler.GetAll())
-	router.HandleFunc("/products/{id}", handler.GetByID())
-	router.HandleFunc("/products/create", handler.Create())
-	router.HandleFunc("/products/update/{id}", handler.Update())
-	router.HandleFunc("/products/delete/{id}", handler.Delete())
+	router.Handle("/products", deps.AuthMiddleware.Middleware(handler.GetAll()))
+	router.Handle("/products/{id}", deps.AuthMiddleware.Middleware(handler.GetByID()))
+	router.Handle("/products/create", deps.AuthMiddleware.Middleware(handler.Create()))
+	router.Handle("/products/update/{id}", deps.AuthMiddleware.Middleware(handler.Update()))
+	router.Handle("/products/delete/{id}", deps.AuthMiddleware.Middleware(handler.Delete()))
 
 	return handler
 }
