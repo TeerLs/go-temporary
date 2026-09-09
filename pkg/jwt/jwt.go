@@ -25,3 +25,12 @@ func (j *JWT) Create(phone string) (string, error) {
 	}
 	return tokenString, nil
 }
+
+func (j *JWT) Verify(tokenString string) (*jwt.Token, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return []byte(j.SecretKey), nil
+	})
+}

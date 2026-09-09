@@ -10,20 +10,22 @@ import (
 
 
 type AuthHandler struct {
-	config.AuthConfig
+	Config config.AuthConfig
 	SessionsStore SessionStore
 	JWT *jwt.JWT
 }
 
 type AuthHandlerDeps struct {
-	config.AuthConfig
+	Config config.AuthConfig
+	SessionsStore SessionStore
+	JWT *jwt.JWT
 }
 
-func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) *AuthHandler {
+func NewAuthHandler(router *http.ServeMux, deps *AuthHandlerDeps) *AuthHandler {
 	handler := &AuthHandler{
-		AuthConfig:   deps.AuthConfig,
-		SessionsStore: NewSessionStore(),
-		JWT:          jwt.NewJWT(deps.AuthConfig.SecretKey),
+		Config:       deps.Config,
+		SessionsStore: deps.SessionsStore,
+		JWT:          deps.JWT,
 	}
 
 	router.HandleFunc("POST /phone-verification", handler.GetPhoneCode())
@@ -53,7 +55,6 @@ func (h *AuthHandler) GetPhoneCode() http.HandlerFunc {
 		}
 		res.WriteJSON(w, GetPhoneCodeResponse{
 			SessionId: sessionId,
-			Code:      "123456",
 		}, http.StatusOK)
 	}
 }

@@ -6,7 +6,6 @@ type GetPhoneCodeRequest struct {
 
 type GetPhoneCodeResponse struct {
 	SessionId string `json:"session_id" validate:"required"`
-	Code    string `json:"code" validate:"required"`
 }
 
 type VerifyPhoneCodeRequest struct {

@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"os"
 	"temporary/config"
+	"temporary/internal/auth"
 	"temporary/internal/product"
 	"temporary/pkg/db"
+	"temporary/pkg/jwt"
 	"temporary/pkg/middleware"
 
 	log "github.com/sirupsen/logrus"
@@ -26,13 +28,19 @@ func main() {
 
 	router := http.NewServeMux()
 
+	auth.NewAuthHandler(router, &auth.AuthHandlerDeps{
+		Config:       cfg.Auth,
+		SessionsStore: auth.NewSessionStore(),
+		JWT:          jwt.NewJWT(cfg.Auth.SecretKey),
+	})
+
 	product.NewProductHandler(router, &product.ProductHandlerDeps{
 		DB: database,
 	})
 
 	server := http.Server{
 		Addr:    cfg.Server.Address,
-		Handler: middleware.LoggingMiddleware(router),
+		Handler: middleware.AuthMiddleware(jwt.NewJWT(cfg.Auth.SecretKey))(middleware.LoggingMiddleware(router)),
 	}
 
 	err := server.ListenAndServe()
