@@ -16,9 +16,14 @@ type ServerConfig struct {
 	Address string `validate:"required"`
 }
 
+type AuthConfig struct {
+	SecretKey string `validate:"required"`
+}
+
 type Config struct {
 	DB DBConfig `validate:"required"`
 	Server ServerConfig `validate:"required"`
+	Auth   AuthConfig   `validate:"required"`
 }
 
 func (c *Config) LoadConfig() *Config {
@@ -33,6 +38,9 @@ func (c *Config) LoadConfig() *Config {
 		},
 		Server: ServerConfig{
 			Address: os.Getenv("ADDRESS"),
+		},
+		Auth: AuthConfig{
+			SecretKey: os.Getenv("SECRET_KEY"),
 		},
 	}
 
