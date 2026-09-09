@@ -43,13 +43,15 @@ func (h *AuthHandler) GetPhoneCode() http.HandlerFunc {
 		}
 
 		var sessionId string
-		err, sessionId = h.SessionsStore.Save(body.Phone)
+		err, sessionId, session := h.SessionsStore.Save(body.Phone)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		res.WriteJSON(w, GetPhoneCodeResponse{
 			SessionId: sessionId,
+			Code:      session.Code,
 		}, http.StatusOK)
 	}
 }

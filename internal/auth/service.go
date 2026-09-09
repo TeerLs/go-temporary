@@ -13,7 +13,7 @@ import (
 
 type SessionStore interface {
 	Delete(sessionId string) error
-	Save(phone string) (error, string)
+	Save(phone string) (error, string, *Session)
 	Get(sessionId string) (*Session, error)
 }
 
@@ -50,24 +50,25 @@ func GenerateSessionId(phone string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-func (s *InMemorySessionStore) Save(phone string) (error, string) {
+func (s *InMemorySessionStore) Save(phone string) (error, string, *Session) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	sessionId, err := GenerateSessionId(phone)
 	if err != nil {
-		return err, ""
+		return err, "", nil
 	}
 
 	if _, exists := s.sessions[sessionId]; exists {
-		return errors.New(ErrSessionIdAlreadyExists), ""
+		return errors.New(ErrSessionIdAlreadyExists), "", nil
 	}
 	code, err := GenerateCode()
 	if err != nil {
-		return err, ""
+		return err, "", nil
 	}
-	s.sessions[sessionId] = Session{Phone: phone, Code: code}
-	return nil, sessionId
+	session := &Session{Phone: phone, Code: code}
+	s.sessions[sessionId] = *session
+	return nil, sessionId, session
 }
 
 func (s *InMemorySessionStore) Get(sessionId string) (*Session, error) {
