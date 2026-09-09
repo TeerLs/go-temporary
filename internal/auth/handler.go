@@ -66,15 +66,15 @@ func (h *AuthHandler) VerifyPhoneCode() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-
-		if body.Code != "123456" {
-			http.Error(w, ErrInvalidCode, http.StatusBadRequest)
+		
+		session, err := h.SessionsStore.Get(body.SessionId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		phone, err := h.SessionsStore.Get(body.SessionId)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if body.Code != session.Code {
+			http.Error(w, ErrInvalidCode, http.StatusBadRequest)
 			return
 		}
 
@@ -84,7 +84,7 @@ func (h *AuthHandler) VerifyPhoneCode() http.HandlerFunc {
 			return
 		}
 
-		token, err := h.JWT.Create(phone)
+		token, err := h.JWT.Create(session.Phone)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

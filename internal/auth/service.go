@@ -15,7 +15,7 @@ type SessionStore interface {
 	Generate(phone string) (string, error)
 	Delete(sessionId string) error
 	Save(sessionId string, phone string) error
-	Get(sessionId string) (string, error)
+	Get(sessionId string) (*Session, error)
 }
 
 type Session struct {
@@ -63,15 +63,15 @@ func (s *InMemorySessionStore) Save(sessionId string, phone string) error {
 	return nil
 }
 
-func (s *InMemorySessionStore) Get(sessionId string) (string, error) {
+func (s *InMemorySessionStore) Get(sessionId string) (*Session, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	session, exists := s.sessions[sessionId]
 	if !exists {
-		return "", errors.New(ErrSessionIdDoesNotExist)
+		return nil, errors.New(ErrSessionIdDoesNotExist)
 	}
-	return session.Phone, nil
+	return &session, nil
 }
 
 func (s *InMemorySessionStore) Delete(sessionId string) error {
