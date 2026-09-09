@@ -42,13 +42,8 @@ func (h *AuthHandler) GetPhoneCode() http.HandlerFunc {
 			return
 		}
 
-		sessionId, err := h.SessionsStore.Generate(body.Phone)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		err = h.SessionsStore.Save(sessionId, body.Phone)
+		var sessionId string
+		err, sessionId = h.SessionsStore.Save(body.Phone)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -2,42 +2,40 @@ package auth
 
 import (
 	"crypto/rand"
-	mathrand "math/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"sync"
 	"time"
 )
 
 type SessionStore interface {
-	Generate(phone string) (string, error)
 	Delete(sessionId string) error
-	Save(sessionId string, phone string) error
+	Save(phone string) (error, string)
 	Get(sessionId string) (*Session, error)
 }
 
 type Session struct {
 	Phone string
-	Code string
+	Code  string
 }
 
-func GenerateCode() string {
-	return fmt.Sprintf("%06d", mathrand.Intn(1000000))
+func GenerateCode() (string, error) {
+	number, err := rand.Int(rand.Reader, big.NewInt(10000))
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%04d", number.Int64()), nil
 }
-
-func (s *Session) GenerateAndSetCode() {
-	s.Code = GenerateCode()
-}
-
 
 type InMemorySessionStore struct {
 	mu       sync.RWMutex
 	sessions map[string]Session
 }
 
-func (s *InMemorySessionStore) Generate(phone string) (string, error) {
+func GenerateSessionId(phone string) (string, error) {
 	salt := make([]byte, 16)
 	if _, err := rand.Read(salt); err != nil {
 		return "", err
@@ -52,15 +50,24 @@ func (s *InMemorySessionStore) Generate(phone string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-func (s *InMemorySessionStore) Save(sessionId string, phone string) error {
+func (s *InMemorySessionStore) Save(phone string) (error, string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, exists := s.sessions[sessionId]; exists {
-		return errors.New(ErrSessionIdAlreadyExists)
+	sessionId, err := GenerateSessionId(phone)
+	if err != nil {
+		return err, ""
 	}
-	s.sessions[sessionId] = Session{Phone: phone, Code: GenerateCode()}
-	return nil
+
+	if _, exists := s.sessions[sessionId]; exists {
+		return errors.New(ErrSessionIdAlreadyExists), ""
+	}
+	code, err := GenerateCode()
+	if err != nil {
+		return err, ""
+	}
+	s.sessions[sessionId] = Session{Phone: phone, Code: code}
+	return nil, sessionId
 }
 
 func (s *InMemorySessionStore) Get(sessionId string) (*Session, error) {
